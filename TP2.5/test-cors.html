@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test CORS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        h1 {
+            color: #333;
+        }
+        #output {
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 600px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test CORS avec l'API Personnes</h1>
+    <div id="output">Chargement...</div>
+
+    <script>
+        function displayData(data) {
+            const outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        }
+
+        function handleError(error) {
+            console.error('Erreur :', error);
+            const outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = '<span style="color: red;">Erreur lors de la récupération des données.</span>';
+        }
+
+        fetch('http://localhost:3000/personnes')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Réponse non valide : ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => displayData(data))
+            .catch(error => handleError(error));
+    </script>
+</body>
+</html>
