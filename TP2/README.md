@@ -51,22 +51,22 @@ Ce projet consiste à créer une API REST sécurisée en utilisant **Express.js*
 
 ## Comment exécuter le projet
 1. Cloner le dépôt :
-   \`\`\`bash
+   \`\`\`
    git clone <url-du-dépôt>
    \`\`\`
 2. Installer les dépendances :
-   \`\`\`bash
+   \`\`\`
    npm install
    \`\`\`
 3. Démarrer Keycloak avec Docker :
-   \`\`\`bash
+   \`\`\`
    docker run -p 8080:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin -v keycloak_data:/opt/keycloak/data quay.io/keycloak/keycloak:latest start-dev
    \`\`\`
 4. Configurer Keycloak :
    - Créer un Realm, un Client et des utilisateurs.
    - Récupérer le Client Secret.
 5. Démarrer l'API :
-   \`\`\`bash
+   \`\`\`
    node index.js
    \`\`\`
 6. Tester les routes avec Postman.
@@ -78,7 +78,7 @@ Ce projet consiste à créer une API REST sécurisée en utilisant **Express.js*
   - Body (x-www-form-urlencoded) :
     - \`grant_type\` : \`password\`
     - \`client_id\` : \`api-personne\`
-    - \`client_secret\` : \`<votre-client-secret>\`
+    - \`client_secret\` :\`<votre-client-secret>\`
     - \`username\` : \`user1\`
     - \`password\` : \`password123\`
 
