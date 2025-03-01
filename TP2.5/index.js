@@ -1,10 +1,11 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const db = require('./database');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000; // Utilise la variable d'environnement ou 3000 par défaut
 
 // Middleware pour parser le JSON
 app.use(express.json());

@@ -1,10 +1,10 @@
 {
-    "realm": "api-realm",
-    "auth-server-url": "http://localhost:8080",
-    "ssl-required": "external",
-    "resource": "api-personne",
-    "credentials": {
-      "secret": "9qNqLSMxKg9puSgtwNim4tEtbW92NSfQ"  
-    },
-    "confidential-port": 0
-  }
+  "realm": "api-realm",
+  "auth-server-url": "http://localhost:8080",
+  "ssl-required": "external",
+  "resource": "api-personne",
+  "credentials": {
+    "secret": "${KEYCLOAK_SECRET}"
+  },
+  "confidential-port": 0
+}
