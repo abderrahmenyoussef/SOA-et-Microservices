@@ -27,6 +27,12 @@ Ce dépôt contient tous les travaux pratiques et le projet final du cours **SOA
 - Tests des requêtes et mutations avec `Apollo Sandbox`
 - Gestion des opérations CRUD via GraphQL (Create, Read, Update, Delete)
 
+### 📂 TP4 : Introduction à gRPC
+- Mise en place d'un service gRPC avec `Node.js` et `protobuf`
+- Création d'un fichier `.proto` pour définir le service et les messages
+- Implémentation d'un serveur gRPC avec la méthode `SayHello`
+- Tests du serveur gRPC avec `Postman`
+
 ## Objectif du dépôt
 - Stocker et organiser les comptes rendus de tous les TPs
 - Conserver le projet final du semestre
