@@ -121,9 +121,6 @@ node proxy.js
 
 Ce projet démontre la mise en œuvre d'une architecture microservices pour une application de chat en temps réel. Il illustre l'utilisation de gRPC pour la communication entre services et de WebSocket pour la communication en temps réel avec le navigateur.
 
-Les avantages de cette architecture incluent :
-- La séparation claire des responsabilités entre les composants
-- La possibilité d'évoluer et de mettre à l'échelle indépendamment chaque composant
-- L'utilisation de protocoles optimisés pour chaque type de communication
+
 
 
