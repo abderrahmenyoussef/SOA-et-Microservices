@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat gRPC WebSocket</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #1877f2;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        
+        .app-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .chat-header {
+            padding: 15px 20px;
+            background-color: #1877f2;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .chat-header .room-info {
+            font-weight: 500;
+            font-size: 18px;
+        }
+        
+        .chat-header .status-indicator {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .status-dot.online {
+            background-color: #4caf50;
+        }
+        
+        .status-dot.offline {
+            background-color: #f44336;
+        }
+        
+        .status-dot.connecting {
+            background-color: #ff9800;
+        }
+        
+        .controls-panel {
+            padding: 10px 20px;
+            background-color: #f5f5f5;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .buttons-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .view-indicator {
+            background-color: rgba(0,0,0,0.1);
+            color: #444;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-left: 10px;
+            display: none;
+        }
+        
+        .view-indicator.active {
+            display: inline-block;
+        }
+        
+        #live-indicator.active {
+            background-color: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+            font-weight: 700;
+            animation: liveBlink 2s infinite;
+        }
+        
+        #history-indicator.active {
+            background-color: rgba(33, 150, 243, 0.2);
+            color: #2196f3;
+            font-weight: 700;
+        }
+        
+        @keyframes liveBlink {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        
+        #new-chat-btn {
+            background-color: #4caf50;
+        }
+        
+        #new-chat-btn:hover {
+            background-color: #3d8b40;
+        }
+        
+        #chat-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background-color: #f0f2f5;
+        }
+        
+        .message {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            position: relative;
+            word-wrap: break-word;
+        }
+        
+        .message.sent {
+            align-self: flex-end;
+            background-color: #dcf8c6;
+            border-bottom-right-radius: 5px;
+            margin-left: 30%;
+        }
+        
+        .message.received {
+            align-self: flex-start;
+            background-color: #ffffff;
+            border-bottom-left-radius: 5px;
+            margin-right: 30%;
+        }
+        
+        .message.system {
+            align-self: center;
+            background-color: #f1f1f1;
+            font-style: italic;
+            font-size: 14px;
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+        
+        .message .sender {
+            font-weight: 500;
+            margin-bottom: 3px;
+            font-size: 14px;
+        }
+        
+        .message .content {
+            font-size: 15px;
+            line-height: 1.4;
+        }
+        
+        .message .meta {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+            text-align: right;
+        }
+        
+        #message-form {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #f5f5f5;
+            border-top: 1px solid #ddd;
+        }
+        
+        #message-input {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 15px;
+            margin-right: 10px;
+            transition: border-color 0.2s;
+        }
+        
+        #message-input:focus {
+            border-color: #1877f2;
+        }
+        
+        button {
+            padding: 12px 20px;
+            background-color: #1877f2;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-weight: 500;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        button:hover {
+            background-color: #166fe5;
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        button i {
+            margin-right: 5px;
+        }
+        
+        .action-btn {
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+        
+        /* Animation effects */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 600px) {
+            .message {
+                max-width: 85%;
+            }
+            
+            .controls-panel {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .control-group {
+                width: 100%;
+            }
+            
+            #message-form {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1><i class="fas fa-comments"></i> Chat gRPC WebSocket</h1>
+    
+    <div class="app-container">
+        <div class="chat-header">
+            <div class="room-info">
+                <i class="fas fa-hashtag"></i> <span id="current-room">room1</span>
+                <span id="history-indicator" class="view-indicator">Historique</span>
+                <span id="live-indicator" class="view-indicator active">En direct</span>
+            </div>
+            <div class="status-indicator">
+                <div id="status-dot" class="status-dot offline"></div>
+                <span id="status">Déconnecté</span>
+            </div>
+        </div>
+        
+        <div class="controls-panel">
+            <div class="control-group">
+                <label for="room-id"><i class="fas fa-door-open"></i> Room ID:</label>
+                <input type="text" id="room-id" value="room1">
+            </div>
+            
+            <div class="control-group">
+                <label for="user-id"><i class="fas fa-user"></i> Votre ID:</label>
+                <input type="text" id="user-id" value="user1">
+            </div>
+            
+            <div class="buttons-group">
+                <button id="load-history" class="action-btn">
+                    <i class="fas fa-history"></i> Charger l'historique
+                </button>
+                <button id="new-chat-btn" class="action-btn" style="display: none;">
+                    <i class="fas fa-comment"></i> Retour au chat
+                </button>
+            </div>
+        </div>
+        
+        <div id="chat-container"></div>
+        
+        <form id="message-form">
+            <input type="text" id="message-input" placeholder="Tapez votre message...">
+            <button type="submit">
+                <i class="fas fa-paper-plane"></i> Envoyer
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // Configuration with corrected protocol handling
+        const HTTP_PROTOCOL = 'http:'; // Force HTTP protocol 
+        const WS_PROTOCOL = 'ws:';     // Force WebSocket protocol
+        
+        // Ensure we're using localhost as hostname
+        const HOST = 'localhost';
+        
+        // Ports - with explicit values
+        const WS_PORT = 8080;
+        const HTTP_PORT = 8081;
+        
+        // Construct complete URLs explicitly
+        const WS_URL = `${WS_PROTOCOL}//${HOST}:${WS_PORT}`;
+        const GRPC_PROXY_URL = `${HTTP_PROTOCOL}//${HOST}:${HTTP_PORT}`;
+        
+        // Log configurations for debug
+        console.log('Client config:', {
+            WS_URL,
+            GRPC_PROXY_URL,
+            windowLocation: window.location.toString(),
+        });
+
+        // Éléments DOM
+        const chatContainer = document.getElementById('chat-container');
+        const messageForm = document.getElementById('message-form');
+        const messageInput = document.getElementById('message-input');
+        const statusElement = document.getElementById('status');
+        const statusDot = document.getElementById('status-dot');
+        const roomIdInput = document.getElementById('room-id');
+        const userIdInput = document.getElementById('user-id');
+        const loadHistoryBtn = document.getElementById('load-history');
+        const newChatBtn = document.getElementById('new-chat-btn');
+        const currentRoomDisplay = document.getElementById('current-room');
+        const historyIndicator = document.getElementById('history-indicator');
+        const liveIndicator = document.getElementById('live-indicator');
+        
+        // Variables d'état
+        let socket;
+        let messageId = 1;
+        let reconnectAttempts = 0;
+        let maxReconnectAttempts = 5;
+        let reconnectTimeout;
+        let liveMessages = []; // Stockage des messages du chat actif
+        let isViewingHistory = false;
+        
+        // Fonctions principales
+        function connectWebSocket() {
+            updateStatus('connecting', 'Connexion en cours...');
+            
+            socket = new WebSocket(WS_URL);
+            
+            socket.onopen = () => {
+                updateStatus('online', 'Connecté');
+                addSystemMessage('<i class="fas fa-plug"></i> Connecté au serveur de chat');
+                reconnectAttempts = 0;
+            };
+            
+            socket.onclose = (e) => {
+                updateStatus('offline', 'Déconnecté');
+                addSystemMessage('<i class="fas fa-times-circle"></i> Déconnecté du serveur');
+                
+                // Tentative de reconnexion automatique
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    reconnectAttempts++;
+                    addSystemMessage(`<i class="fas fa-sync"></i> Tentative de reconnexion ${reconnectAttempts}/${maxReconnectAttempts}...`);
+                    reconnectTimeout = setTimeout(connectWebSocket, 3000);
+                }
+            };
+            
+            socket.onerror = (error) => {
+                updateStatus('offline', 'Erreur de connexion');
+                console.error('WebSocket error:', error);
+            };
+            
+            socket.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.chat_message) {
+                        addReceivedMessage(data.chat_message);
+                        
+                        // Notification sonore et visuelle pour les nouveaux messages
+                        if (document.hidden) {
+                            notifyUser(data.chat_message);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error parsing message:', e);
+                }
+            };
+        }
+        
+        async function testServerConnection() {
+            try {
+                const url = `http://localhost:8081/status`;
+                console.log(`Testing server connectivity at: ${url}`);
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    mode: 'cors'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Server status:', data);
+                return true;
+            } catch (error) {
+                console.error('Server connectivity test failed:', error);
+                return false;
+            }
+        }
+        
+        async function loadChatHistory() {
+            const roomId = roomIdInput.value.trim();
+            const userId = userIdInput.value.trim();
+            currentRoomDisplay.textContent = roomId;
+            const maxMessages = 50;
+            
+            // Sauvegarder les messages actuels avant de charger l'historique
+            if (!isViewingHistory) {
+                liveMessages = Array.from(chatContainer.children);
+            }
+            
+            // Passer en mode historique
+            setHistoryMode(true);
+            
+            try {
+                // Vider le conteneur de chat avant d'afficher le message de chargement
+                chatContainer.innerHTML = '';
+                
+                // Test connectivity first
+                const isConnected = await testServerConnection().catch(() => false);
+                if (!isConnected) {
+                    throw new Error('Le serveur proxy HTTP n\'est pas accessible. Vérifiez que le serveur est démarré et que le port n\'est pas bloqué.');
+                }
+                
+                // Ajouter le message "chargement" directement
+                const loadingMsg = document.createElement('div');
+                loadingMsg.className = 'message system';
+                loadingMsg.innerHTML = `<i class="fas fa-sync fa-spin"></i> Chargement de l'historique pour ${userId} dans ${roomId}...`;
+                chatContainer.appendChild(loadingMsg);
+                
+                // Force using a direct URL rather than building it from window.location
+                const apiUrl = `http://localhost:8081/history?room_id=${roomId}&max_messages=${maxMessages}`;
+                console.log(`Fetching history from: ${apiUrl}`);
+                
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    mode: 'cors',
+                    cache: 'no-cache'
+                });
+                
+                console.log('Fetch response received:', response);
+                
+                if (!response.ok) {
+                    let errorMessage = `Erreur HTTP ${response.status}: ${response.statusText}`;
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.error || errorMessage;
+                    } catch (e) {
+                        console.error('Error parsing error response:', e);
+                    }
+                    throw new Error(errorMessage);
+                }
+                
+                let data;
+                try {
+                    data = await response.json();
+                    console.log('History data received:', data);
+                } catch (e) {
+                    console.error('Error parsing JSON response:', e);
+                    console.log('Raw response:', await response.text());
+                    throw new Error('Format de réponse invalide');
+                }
+                
+                // Vider le conteneur après le chargement (pour supprimer le message de chargement)
+                chatContainer.innerHTML = '';
+                
+                if (data.messages && data.messages.length > 0) {
+                    // Filtrer les messages pour n'afficher que ceux de l'utilisateur actuel
+                    const userMessages = data.messages.filter(msg => msg.sender_id === userId);
+                    
+                    if (userMessages.length > 0) {
+                        userMessages.forEach(msg => {
+                            addSentMessage(msg, false); // Ne pas ajouter à liveMessages
+                        });
+                        
+                        // Ajouter message de confirmation
+                        const successMsg = document.createElement('div');
+                        successMsg.className = 'message system';
+                        successMsg.innerHTML = `<i class="fas fa-check-circle"></i> Historique chargé (${userMessages.length} messages pour ${userId})`;
+                        chatContainer.appendChild(successMsg);
+                    } else {
+                        // Aucun message pour cet utilisateur
+                        const emptyUserMsg = document.createElement('div');
+                        emptyUserMsg.className = 'message system';
+                        emptyUserMsg.innerHTML = `<i class="fas fa-info-circle"></i> Aucun message trouvé pour ${userId} dans la room ${roomId}`;
+                        chatContainer.appendChild(emptyUserMsg);
+                    }
+                } else {
+                    // Ajouter message "aucun message" directement
+                    const emptyMsg = document.createElement('div');
+                    emptyMsg.className = 'message system';
+                    emptyMsg.innerHTML = '<i class="fas fa-info-circle"></i> Aucun message dans l\'historique';
+                    chatContainer.appendChild(emptyMsg);
+                }
+                
+                // Ajouter des contrôles pour basculer entre l'affichage personnel et global
+                const controlsContainer = document.createElement('div');
+                controlsContainer.className = 'history-controls';
+                controlsContainer.innerHTML = `
+                    <button id="show-personal-history" class="history-toggle active">
+                        <i class="fas fa-user"></i> Mes messages uniquement
+                    </button>
+                    <button id="show-all-history" class="history-toggle">
+                        <i class="fas fa-users"></i> Tous les messages
+                    </button>
+                `;
+                chatContainer.insertBefore(controlsContainer, chatContainer.firstChild);
+                
+                // Stocker les données complètes pour pouvoir basculer sans recharger
+                controlsContainer.dataset.allMessages = JSON.stringify(data.messages);
+                controlsContainer.dataset.userId = userId;
+                
+                // Ajouter des événements aux boutons de contrôle
+                document.getElementById('show-personal-history').addEventListener('click', showPersonalHistory);
+                document.getElementById('show-all-history').addEventListener('click', showAllHistory);
+                
+            } catch (error) {
+                console.error('Error loading history:', error);
+                
+                // Add connection information to help debug
+                chatContainer.innerHTML = '';
+                
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'message system';
+                errorMsg.innerHTML = `
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    <strong>Erreur de chargement:</strong> ${error.message}
+                `;
+                chatContainer.appendChild(errorMsg);
+                
+                // Add connection info
+                const infoMsg = document.createElement('div');
+                infoMsg.className = 'message system';
+                infoMsg.innerHTML = `
+                    <strong>Informations de connexion:</strong><br>
+                    URL: ${GRPC_PROXY_URL}/history<br>
+                    URL correcte: http://localhost:8081/history<br>
+                    Navigateur: ${navigator.userAgent}<br>
+                    <strong>Note:</strong> Si vous ouvrez ce fichier directement (protocole file://), 
+                    la requête vers http:// peut être bloquée par le navigateur.
+                `;
+                chatContainer.appendChild(infoMsg);
+                
+                // Add better resolution options
+                const helpMsg = document.createElement('div');
+                helpMsg.className = 'message system';
+                helpMsg.innerHTML = `
+                    <strong>Résolution:</strong><br>
+                    1. <strong>Ouvrez cette page via un serveur HTTP</strong> au lieu du protocole file://<br>
+                    2. Vérifiez que le serveur proxy est en cours d'exécution<br>
+                    3. Vérifiez que le port ${HTTP_PORT} n'est pas bloqué<br>
+                    4. Utilisez la version Chrome qui est moins restrictive pour les requêtes cross-origin locales
+                `;
+                chatContainer.appendChild(helpMsg);
+                
+                // Add a simple instruction for serving the file
+                const serveMsg = document.createElement('div');
+                serveMsg.className = 'message system';
+                serveMsg.style.backgroundColor = '#fff3cd';
+                serveMsg.style.border = '1px solid #ffeeba';
+                serveMsg.style.padding = '10px 15px';
+                serveMsg.innerHTML = `
+                    <strong>Comment servir cette page via HTTP:</strong><br>
+                    Dans le dossier du projet, exécutez:<br>
+                    <code>npx http-server -p 8000</code><br>
+                    Puis accédez à <a href="http://localhost:8000/client.html" target="_blank">http://localhost:8000/client.html</a>
+                `;
+                chatContainer.appendChild(serveMsg);
+                
+                // Add retry button with server test
+                const retryContainer = document.createElement('div');
+                retryContainer.style.textAlign = 'center';
+                retryContainer.style.margin = '15px 0';
+                
+                const testBtn = document.createElement('button');
+                testBtn.innerHTML = '<i class="fas fa-stethoscope"></i> Tester la connexion';
+                testBtn.className = 'action-btn';
+                testBtn.style.marginRight = '10px';
+                testBtn.onclick = async () => {
+                    try {
+                        const result = await testServerConnection();
+                        if (result) {
+                            alert('Connexion au serveur réussie! Vous pouvez réessayer de charger l\'historique.');
+                        } else {
+                            alert('Impossible de se connecter au serveur. Vérifiez que le serveur proxy est en cours d\'exécution.');
+                        }
+                    } catch (e) {
+                        alert('Test échoué: ' + e.message);
+                    }
+                };
+                
+                const retryBtn = document.createElement('button');
+                retryBtn.innerHTML = '<i class="fas fa-redo"></i> Réessayer';
+                retryBtn.className = 'action-btn';
+                retryBtn.onclick = loadChatHistory;
+                
+                retryContainer.appendChild(testBtn);
+                retryContainer.appendChild(retryBtn);
+                chatContainer.appendChild(retryContainer);
+            }
+        }
+        
+        function returnToLiveChat() {
+            setHistoryMode(false);
+            
+            // Restaurer les messages du chat actif
+            chatContainer.innerHTML = '';
+            
+            // Recréer les éléments du chat en direct
+            liveMessages.forEach(element => {
+                chatContainer.appendChild(element.cloneNode(true));
+            });
+            
+            // Ajouter un message système pour indiquer le retour au chat actif
+            // en utilisant addSystemMessage pour l'ajouter à liveMessages
+            addSystemMessage('<i class="fas fa-comment"></i> Retour au chat en direct');
+            
+            // Faire défiler jusqu'au dernier message
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        function setHistoryMode(isHistory) {
+            isViewingHistory = isHistory;
+            
+            // Mettre à jour les indicateurs visuels
+            historyIndicator.classList.toggle('active', isHistory);
+            liveIndicator.classList.toggle('active', !isHistory);
+            
+            // Afficher/masquer les boutons appropriés
+            loadHistoryBtn.style.display = isHistory ? 'none' : 'flex';
+            newChatBtn.style.display = isHistory ? 'flex' : 'none';
+            
+            // Activer/désactiver le formulaire d'envoi de message
+            messageForm.classList.toggle('disabled', isHistory);
+            messageInput.disabled = isHistory;
+            messageInput.placeholder = isHistory ? 'Mode historique - impossible d\'envoyer des messages' : 'Tapez votre message...';
+            
+            // S'assurer que le bouton d'envoi n'est pas désactivé en mode chat
+            const submitButton = messageForm.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = isHistory;
+            }
+        }
+        
+        function updateStatus(state, text) {
+            statusDot.className = `status-dot ${state}`;
+            statusElement.textContent = text;
+        }
+        
+        function notifyUser(message) {
+            // Notification sonore
+            const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-message-pop-alert-2354.mp3');
+            audio.play();
+            
+            // Notification du navigateur si supporté
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('Nouveau message', {
+                    body: `${message.sender_id}: ${message.content}`,
+                    icon: 'https://img.icons8.com/color/48/000000/chat--v1.png'
+                });
+            } else if ('Notification' in window && Notification.permission !== 'denied') {
+                Notification.requestPermission();
+            }
+            
+            // Changer le titre de la page
+            const originalTitle = document.title;
+            let titleInterval = setInterval(() => {
+                document.title = document.title === 'Nouveau message !' ? originalTitle : 'Nouveau message !';
+            }, 1000);
+            
+            // Arrêter l'animation du titre quand l'utilisateur revient sur la page
+            window.addEventListener('focus', function() {
+                clearInterval(titleInterval);
+                document.title = originalTitle;
+            }, { once: true });
+        }
+        
+        // Fonctions d'affichage
+        function addSystemMessage(text, addToLive = true) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message system';
+            messageElement.innerHTML = text;
+            chatContainer.appendChild(messageElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // Ajouter à liveMessages seulement si demandé et pas en mode historique
+            if (addToLive && !isViewingHistory) {
+                liveMessages.push(messageElement.cloneNode(true));
+            }
+        }
+        
+        function addSentMessage(message, addToLive = true) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message sent';
+            
+            let dateStr = new Date(message.timestamp || Date.now()).toLocaleTimeString();
+            
+            messageElement.innerHTML = `
+                <div class="content">${message.content}</div>
+                <div class="meta">${dateStr} <i class="fas fa-check"></i></div>
+            `;
+            chatContainer.appendChild(messageElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // Ajouter à liveMessages seulement si demandé et pas en mode historique
+            if (addToLive && !isViewingHistory) {
+                liveMessages.push(messageElement.cloneNode(true));
+            }
+        }
+        
+        function addReceivedMessage(message, addToLive = true) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message received';
+            
+            // Formater la date correctement
+            let dateStr = 'Date inconnue';
+            if (message.timestamp) {
+                const timestamp = typeof message.timestamp === 'string' ? 
+                    parseInt(message.timestamp) : message.timestamp;
+                dateStr = new Date(timestamp).toLocaleTimeString();
+            }
+            
+            messageElement.innerHTML = `
+                <div class="sender">${message.sender_id}</div>
+                <div class="content">${message.content}</div>
+                <div class="meta">${dateStr}</div>
+            `;
+            chatContainer.appendChild(messageElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // Ajouter à liveMessages seulement si demandé et pas en mode historique
+            if (addToLive && !isViewingHistory) {
+                liveMessages.push(messageElement.cloneNode(true));
+            }
+        }
+        
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || !socket || socket.readyState !== WebSocket.OPEN) {
+                if (socket && socket.readyState !== WebSocket.OPEN) {
+                    addSystemMessage('<i class="fas fa-exclamation-triangle"></i> Impossible d\'envoyer, reconnexion en cours...');
+                    connectWebSocket();
+                }
+                return;
+            }
+            
+            const roomId = roomIdInput.value.trim();
+            const userId = userIdInput.value.trim();
+            currentRoomDisplay.textContent = roomId;
+            
+            const chatMessage = {
+                chat_message: {
+                    id: `msg-${messageId++}`,
+                    room_id: roomId,
+                    sender_id: userId,
+                    content: message,
+                    timestamp: Date.now()
+                }
+            };
+            
+            socket.send(JSON.stringify(chatMessage));
+            addSentMessage(chatMessage.chat_message);
+            messageInput.value = '';
+            messageInput.focus();
+        }
+        
+        function showPersonalHistory(e) {
+            e.preventDefault();
+            
+            // Récupérer le conteneur des contrôles
+            const controlsContainer = document.querySelector('.history-controls');
+            if (!controlsContainer) return;
+            
+            // Récupérer les données stockées
+            const allMessages = JSON.parse(controlsContainer.dataset.allMessages || '[]');
+            const userId = controlsContainer.dataset.userId;
+            
+            // Activer/désactiver les boutons de contrôle
+            document.getElementById('show-personal-history').classList.add('active');
+            document.getElementById('show-all-history').classList.remove('active');
+            
+            // Supprimer tous les messages actuels (sauf les contrôles)
+            const messagesToRemove = Array.from(chatContainer.querySelectorAll('.message:not(.system)'));
+            messagesToRemove.forEach(msg => msg.remove());
+            
+            // Supprimer également les messages système de confirmation
+            const systemMessages = Array.from(chatContainer.querySelectorAll('.message.system:not(.history-controls)'));
+            systemMessages.forEach(msg => msg.remove());
+            
+            // Filtrer et afficher uniquement les messages de l'utilisateur
+            const userMessages = allMessages.filter(msg => msg.sender_id === userId);
+            
+            if (userMessages.length > 0) {
+                userMessages.forEach(msg => {
+                    addSentMessage(msg, false);
+                });
+                
+                // Ajouter message de confirmation
+                const successMsg = document.createElement('div');
+                successMsg.className = 'message system';
+                successMsg.innerHTML = `<i class="fas fa-check-circle"></i> Historique personnel (${userMessages.length} messages)`;
+                chatContainer.appendChild(successMsg);
+            } else {
+                // Aucun message pour cet utilisateur
+                const emptyUserMsg = document.createElement('div');
+                emptyUserMsg.className = 'message system';
+                emptyUserMsg.innerHTML = `<i class="fas fa-info-circle"></i> Aucun message trouvé pour ${userId}`;
+                chatContainer.appendChild(emptyUserMsg);
+            }
+        }
+        
+        function showAllHistory(e) {
+            e.preventDefault();
+            
+            // Récupérer le conteneur des contrôles
+            const controlsContainer = document.querySelector('.history-controls');
+            if (!controlsContainer) return;
+            
+            // Récupérer les données stockées
+            const allMessages = JSON.parse(controlsContainer.dataset.allMessages || '[]');
+            const userId = controlsContainer.dataset.userId;
+            
+            // Activer/désactiver les boutons de contrôle
+            document.getElementById('show-personal-history').classList.remove('active');
+            document.getElementById('show-all-history').classList.add('active');
+            
+            // Supprimer tous les messages actuels (sauf les contrôles)
+            const messagesToRemove = Array.from(chatContainer.querySelectorAll('.message:not(.history-controls)'));
+            messagesToRemove.forEach(msg => msg.remove());
+            
+            // Afficher tous les messages
+            if (allMessages.length > 0) {
+                allMessages.forEach(msg => {
+                    const isCurrentUser = msg.sender_id === userId;
+                    if (isCurrentUser) {
+                        addSentMessage(msg, false);
+                    } else {
+                        addReceivedMessage(msg, false);
+                    }
+                });
+                
+                // Ajouter message de confirmation
+                const successMsg = document.createElement('div');
+                successMsg.className = 'message system';
+                successMsg.innerHTML = `<i class="fas fa-check-circle"></i> Historique complet (${allMessages.length} messages)`;
+                chatContainer.appendChild(successMsg);
+            } else {
+                // Aucun message
+                const emptyMsg = document.createElement('div');
+                emptyMsg.className = 'message system';
+                emptyMsg.innerHTML = '<i class="fas fa-info-circle"></i> Aucun message dans l\'historique';
+                chatContainer.appendChild(emptyMsg);
+            }
+        }
+        
+        // Événements
+        messageForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // Correction: S'assurer que le bouton d'envoi fonctionne toujours
+            if (!isViewingHistory) {
+                sendMessage();
+            } else {
+                addSystemMessage('<i class="fas fa-info-circle"></i> Vous êtes en mode historique. Retournez au chat pour envoyer des messages.');
+            }
+        });
+        
+        loadHistoryBtn.addEventListener('click', loadChatHistory);
+        newChatBtn.addEventListener('click', returnToLiveChat);
+        
+        roomIdInput.addEventListener('change', () => {
+            currentRoomDisplay.textContent = roomIdInput.value.trim();
+        });
+        
+        // Ajouter du style CSS pour le mode historique et les contrôles
+        const style = document.createElement('style');
+        style.textContent = `
+            #message-form.disabled button {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+            
+            #message-input:disabled {
+                background-color: #f0f0f0;
+            }
+            
+            @keyframes liveBlink {
+                0% { opacity: 1; }
+                50% { opacity: 0.6; }
+                100% { opacity: 1; }
+            }
+            
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+                100% { transform: scale(1); }
+            }
+            
+            .view-indicator.active {
+                animation: pulse 2s infinite;
+            }
+            
+            .history-controls {
+                display: flex;
+                justify-content: center;
+                gap: 10px;
+                margin-bottom: 15px;
+                padding: 5px;
+                border-radius: 20px;
+                background-color: #f0f0f0;
+            }
+            
+            .history-toggle {
+                padding: 5px 10px;
+                font-size: 12px;
+                background-color: #e0e0e0;
+                color: #555;
+                border-radius: 15px;
+            }
+            
+            .history-toggle.active {
+                background-color: #1877f2;
+                color: white;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Demander la permission pour les notifications
+        if ('Notification' in window) {
+            Notification.requestPermission();
+        }
+        
+        // Initialisation
+        connectWebSocket();
+        
+        // Reconnecter automatiquement lorsque la fenêtre redevient active
+        window.addEventListener('online', () => {
+            if (socket.readyState !== WebSocket.OPEN) {
+                addSystemMessage('<i class="fas fa-wifi"></i> Connexion internet rétablie, reconnexion...');
+                connectWebSocket();
+            }
+        });
+        
+        // Empêcher la fermeture accidentelle de la page
+        window.addEventListener('beforeunload', (e) => {
+            if (socket.readyState === WebSocket.OPEN) {
+                e.preventDefault();
+                e.returnValue = '';
+                return '';
+            }
+        });
+    </script>
+</body>
+</html>

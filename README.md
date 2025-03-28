@@ -33,6 +33,13 @@ Ce dépôt contient tous les travaux pratiques et le projet final du cours **SOA
 - Implémentation d'un serveur gRPC avec la méthode `SayHello`
 - Tests du serveur gRPC avec `Postman`
 
+### 📂 TP5 : Reverse Proxy WebSocket avec microservice gRPC
+- Développement d'un système de chat en temps réel avec `gRPC` et `WebSocket`
+- Mise en place d'un proxy WebSocket pour faire le lien entre les clients et le service gRPC
+- Implémentation d'un serveur gRPC pour gérer les messages et l'historique du chat
+- Développement d'une interface web pour envoyer et recevoir des messages en temps réel
+- Tests de connexion WebSocket et communication client-serveur avec `Postman`
+
 ## Objectif du dépôt
 - Stocker et organiser les comptes rendus de tous les TPs
 - Conserver le projet final du semestre
