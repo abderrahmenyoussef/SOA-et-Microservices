@@ -40,6 +40,14 @@ Ce dépôt contient tous les travaux pratiques et le projet final du cours **SOA
 - Développement d'une interface web pour envoyer et recevoir des messages en temps réel
 - Tests de connexion WebSocket et communication client-serveur avec `Postman`
 
+### 📂 TP6 : Système de Messagerie Apache Kafka avec MongoDB et API REST
+- Mise en place d'une architecture de microservices basée sur `Apache Kafka`
+- Développement d'un producteur Kafka qui envoie des messages à un topic
+- Création d'un consommateur Kafka qui stocke les messages dans `MongoDB`
+- Implémentation d'une API REST avec `Express` pour accéder aux messages stockés
+- Développement d'une interface utilisateur web avec `Bootstrap 5` pour visualiser les messages en temps réel
+- Tests de l'architecture complète : production de messages, consommation, stockage et affichage
+
 ## Objectif du dépôt
 - Stocker et organiser les comptes rendus de tous les TPs
 - Conserver le projet final du semestre
