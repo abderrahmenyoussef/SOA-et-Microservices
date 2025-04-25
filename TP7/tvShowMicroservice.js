@@ -1,5 +1,7 @@
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
+const mongoose = require('mongoose');
+const { TVShow } = require('./models');
 
 const tvShowProtoPath = 'tvShow.proto';
 const tvShowProtoDefinition = protoLoader.loadSync(tvShowProtoPath, {
@@ -12,39 +14,42 @@ const tvShowProtoDefinition = protoLoader.loadSync(tvShowProtoPath, {
 
 const tvShowProto = grpc.loadPackageDefinition(tvShowProtoDefinition).tvShow;
 
+// Connexion MongoDB
+mongoose.connect('mongodb://localhost:27017/tp7', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+});
+
 const tvShowService = {
-    getTvshow: (call, callback) => {
-        const tv_show = {
-            id: call.request.tv_show_id,
-            title: 'Exemple de série TV',
-            description: 'Ceci est un exemple de série TV.',
-        };
-        callback(null, { tv_show });
+    getTvshow: async (call, callback) => {
+        try {
+            const tv_show = await TVShow.findOne({ id: call.request.tv_show_id });
+            if (!tv_show) return callback(null, { tv_show: null });
+            callback(null, { tv_show });
+        } catch (err) {
+            callback(err);
+        }
     },
-    searchTvshows: (call, callback) => {
-        const tv_shows = [
-            {
-                id: '1',
-                title: 'Série 1',
-                description: 'Description de la série 1',
-            },
-            {
-                id: '2',
-                title: 'Série 2',
-                description: 'Description de la série 2',
-            },
-        ];
-        callback(null, { tv_shows });
+    searchTvshows: async (call, callback) => {
+        try {
+            const tv_shows = await TVShow.find();
+            callback(null, { tv_shows });
+        } catch (err) {
+            callback(err);
+        }
     },
-    createTvshow: (call, callback) => {
-        // Dans un environnement de production, cette méthode devrait persister les données dans une base de données
-        const newTvShow = {
-            id: call.request.id,
-            title: call.request.title,
-            description: call.request.description
-        };
-        console.log('Nouvelle série TV créée:', newTvShow);
-        callback(null, { tv_show: newTvShow });
+    createTvshow: async (call, callback) => {
+        try {
+            const newTvShow = new TVShow({
+                id: call.request.id,
+                title: call.request.title,
+                description: call.request.description
+            });
+            await newTvShow.save();
+            callback(null, { tv_show: newTvShow });
+        } catch (err) {
+            callback(err);
+        }
     }
 };
 

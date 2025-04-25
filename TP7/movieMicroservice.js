@@ -1,5 +1,7 @@
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
+const mongoose = require('mongoose');
+const { Movie } = require('./models');
 
 const movieProtoPath = 'movie.proto';
 const movieProtoDefinition = protoLoader.loadSync(movieProtoPath, {
@@ -12,39 +14,42 @@ const movieProtoDefinition = protoLoader.loadSync(movieProtoPath, {
 
 const movieProto = grpc.loadPackageDefinition(movieProtoDefinition).movie;
 
+// Connexion MongoDB
+mongoose.connect('mongodb://localhost:27017/tp7', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+});
+
 const movieService = {
-    getMovie: (call, callback) => {
-        const movie = {
-            id: call.request.movie_id,
-            title: 'Exemple de film',
-            description: 'Ceci est un exemple de film.',
-        };
-        callback(null, { movie });
+    getMovie: async (call, callback) => {
+        try {
+            const movie = await Movie.findOne({ id: call.request.movie_id });
+            if (!movie) return callback(null, { movie: null });
+            callback(null, { movie });
+        } catch (err) {
+            callback(err);
+        }
     },
-    searchMovies: (call, callback) => {
-        const movies = [
-            {
-                id: '1',
-                title: 'Film 1',
-                description: 'Description du film 1',
-            },
-            {
-                id: '2',
-                title: 'Film 2',
-                description: 'Description du film 2',
-            },
-        ];
-        callback(null, { movies });
+    searchMovies: async (call, callback) => {
+        try {
+            const movies = await Movie.find();
+            callback(null, { movies });
+        } catch (err) {
+            callback(err);
+        }
     },
-    createMovie: (call, callback) => {
-        // Dans un environnement de production, cette méthode devrait persister les données dans une base de données
-        const newMovie = {
-            id: call.request.id,
-            title: call.request.title,
-            description: call.request.description
-        };
-        console.log('Nouveau film créé:', newMovie);
-        callback(null, { movie: newMovie });
+    createMovie: async (call, callback) => {
+        try {
+            const newMovie = new Movie({
+                id: call.request.id,
+                title: call.request.title,
+                description: call.request.description
+            });
+            await newMovie.save();
+            callback(null, { movie: newMovie });
+        } catch (err) {
+            callback(err);
+        }
     }
 };
 

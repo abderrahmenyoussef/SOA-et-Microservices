@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>AbdouFlix</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #181818; color: #fff; margin: 0; }
+    header { background: #e50914; padding: 1rem; text-align: center; font-size: 2rem; letter-spacing: 2px; }
+    main { max-width: 900px; margin: 2rem auto; padding: 2rem; background: #222; border-radius: 8px; }
+    h2 { color: #e50914; }
+    .section { margin-bottom: 2rem; }
+    form { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    input, button { padding: 0.5rem; border-radius: 4px; border: none; }
+    input { flex: 1; }
+    button { background: #e50914; color: #fff; cursor: pointer; transition: background 0.2s; }
+    button:hover { background: #b0060f; }
+    .list { display: flex; flex-wrap: wrap; gap: 1rem; }
+    .card { background: #333; padding: 1rem; border-radius: 6px; min-width: 220px; max-width: 250px; box-shadow: 0 2px 8px #0005; }
+    .card h3 { margin: 0 0 0.5rem 0; color: #fff; }
+    .card p { margin: 0.2rem 0; color: #ccc; }
+    @media (max-width: 600px) { main { padding: 0.5rem; } .list { flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <header>AbdouFlix</header>
+  <main>
+    <section class="section">
+      <h2>Ajouter un film</h2>
+      <form id="movieForm">
+        <input type="text" id="movieId" placeholder="ID" required>
+        <input type="text" id="movieTitle" placeholder="Titre" required>
+        <input type="text" id="movieDesc" placeholder="Description" required>
+        <button type="submit">Ajouter</button>
+      </form>
+    </section>
+    <section class="section">
+      <h2>Ajouter une série TV</h2>
+      <form id="tvForm">
+        <input type="text" id="tvId" placeholder="ID" required>
+        <input type="text" id="tvTitle" placeholder="Titre" required>
+        <input type="text" id="tvDesc" placeholder="Description" required>
+        <button type="submit">Ajouter</button>
+      </form>
+    </section>
+    <section class="section">
+      <h2>Films</h2>
+      <div class="list" id="moviesList"></div>
+    </section>
+    <section class="section">
+      <h2>Séries TV</h2>
+      <div class="list" id="tvList"></div>
+    </section>
+  </main>
+  <script>
+    const api = 'http://localhost:3000';
+
+    async function fetchMovies() {
+      const res = await fetch(api + '/movies');
+      const data = await res.json();
+      const list = document.getElementById('moviesList');
+      list.innerHTML = '';
+      data.forEach(movie => {
+        list.innerHTML += `<div class="card"><h3>${movie.title}</h3><p><b>ID:</b> ${movie.id}</p><p>${movie.description}</p></div>`;
+      });
+    }
+    async function fetchTVShows() {
+      const res = await fetch(api + '/tvshows');
+      const data = await res.json();
+      const list = document.getElementById('tvList');
+      list.innerHTML = '';
+      data.forEach(tv => {
+        list.innerHTML += `<div class="card"><h3>${tv.title}</h3><p><b>ID:</b> ${tv.id}</p><p>${tv.description}</p></div>`;
+      });
+    }
+    document.getElementById('movieForm').onsubmit = async e => {
+      e.preventDefault();
+      const id = document.getElementById('movieId').value;
+      const title = document.getElementById('movieTitle').value;
+      const description = document.getElementById('movieDesc').value;
+      await fetch(api + '/movies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, title, description })
+      });
+      fetchMovies();
+      e.target.reset();
+    };
+    document.getElementById('tvForm').onsubmit = async e => {
+      e.preventDefault();
+      const id = document.getElementById('tvId').value;
+      const title = document.getElementById('tvTitle').value;
+      const description = document.getElementById('tvDesc').value;
+      await fetch(api + '/tvshows', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, title, description })
+      });
+      fetchTVShows();
+      e.target.reset();
+    };
+    fetchMovies();
+    fetchTVShows();
+  </script>
+</body>
+</html>
