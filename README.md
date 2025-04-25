@@ -48,6 +48,16 @@ Ce dépôt contient tous les travaux pratiques et le projet final du cours **SOA
 - Développement d'une interface utilisateur web avec `Bootstrap 5` pour visualiser les messages en temps réel
 - Tests de l'architecture complète : production de messages, consommation, stockage et affichage
 
+### 📂 TP7 : Microservices Films & Séries avec gRPC, Kafka, MongoDB, GraphQL et API REST
+- Architecture microservices complète pour la gestion de films et séries TV
+- Communication inter-services avec `gRPC`
+- Messagerie asynchrone avec `Apache Kafka`
+- Stockage persistant avec `MongoDB` et `Mongoose`
+- API REST et endpoint `GraphQL` via une API Gateway Express
+- Interface web native (HTML/CSS/JS) pour ajouter et visualiser les films/séries
+- Intégration de KafkaJS, dotenv, et gestion avancée des variables d'environnement
+- Tests de bout en bout : ajout, consultation, persistance, messagerie et requêtes GraphQL
+
 ## Objectif du dépôt
 - Stocker et organiser les comptes rendus de tous les TPs
 - Conserver le projet final du semestre
