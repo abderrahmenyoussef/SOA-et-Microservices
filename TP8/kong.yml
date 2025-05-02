@@ -1,0 +1,12 @@
+_format_version: "1.1"
+services:
+- name: service-a
+  url: http://service-a:3001
+  routes:
+  - name: users-route
+    paths: ["/users"]
+- name: service-b
+  url: http://service-b:3002
+  routes:
+  - name: products-route
+    paths: ["/products"]
