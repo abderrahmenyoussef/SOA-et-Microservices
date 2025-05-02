@@ -58,6 +58,18 @@ Ce dépôt contient tous les travaux pratiques et le projet final du cours **SOA
 - Intégration de KafkaJS, dotenv, et gestion avancée des variables d'environnement
 - Tests de bout en bout : ajout, consultation, persistance, messagerie et requêtes GraphQL
 
+### 📂 TP8 : Microservices avec API Gateway Kong et Docker
+- Implémentation d'une architecture microservices avec `Kong` comme API Gateway
+- Configuration de Kong en mode DB-less avec fichier de configuration déclaratif (`kong.yml`)
+- Développement de microservices `Node.js` simples pour la gestion des utilisateurs et produits
+- Communication entre services via un réseau Docker dédié
+- Orchestration complète avec `Docker Compose`
+- Routage des requêtes HTTP via Kong (`/users` et `/products`)
+- Tests des endpoints via l'API Gateway avec `curl` et `Postman`
+- Administration de Kong via son API REST (port 8001)
+- Résolution de problèmes d'accès à l'API d'administration de Kong (binding d'interfaces)
+- Documentation complète du projet et des étapes de déploiement
+
 ## Objectif du dépôt
 - Stocker et organiser les comptes rendus de tous les TPs
 - Conserver le projet final du semestre
